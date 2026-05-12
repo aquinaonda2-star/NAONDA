@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>NAONDA — Dashboard Financeiro</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0e0e10;
+    --surface: #17171a;
+    --surface2: #1e1e23;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.12);
+    --text: #f0f0f0;
+    --muted: #888;
+    --muted2: #555;
+    --green: #2dce7e;
+    --green-bg: rgba(45,206,126,0.1);
+    --red: #ff5e5e;
+    --red-bg: rgba(255,94,94,0.1);
+    --yellow: #f5c842;
+    --yellow-bg: rgba(245,200,66,0.1);
+    --accent: #e8f542;
+    --accent-bg: rgba(232,245,66,0.08);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body {
+    font-family: 'Syne', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    max-width: 430px;
+    margin: 0 auto;
+    padding-bottom: 100px;
+  }
+  /* Header */
+  .header {
+    padding: 52px 20px 24px;
+    position: sticky; top: 0;
+    background: var(--bg);
+    z-index: 10;
+    border-bottom: 1px solid var(--border);
+  }
+  .header-top { display: flex; justify-content: space-between; align-items: center; }
+  .logo { font-size: 20px; font-weight: 800; letter-spacing: -0.5px; }
+  .logo span { color: var(--accent); }
+  .badge-live {
+    font-size: 10px; font-weight: 600; font-family: 'DM Mono', monospace;
+    background: var(--accent-bg); color: var(--accent);
+    border: 1px solid rgba(232,245,66,0.25);
+    padding: 3px 8px; border-radius: 20px;
+    letter-spacing: 0.5px;
+  }
+  /* Month tabs */
+  .month-tabs {
+    display: flex; gap: 6px; margin-top: 16px;
+    overflow-x: auto; scrollbar-width: none;
+  }
+  .month-tabs::-webkit-scrollbar { display: none; }
+  .tab {
+    font-size: 12px; font-weight: 600; font-family: 'Syne', sans-serif;
+    padding: 6px 14px; border-radius: 20px; border: 1px solid var(--border2);
+    background: transparent; color: var(--muted); cursor: pointer;
+    white-space: nowrap; transition: all 0.15s;
+  }
+  .tab.active { background: var(--accent); color: #0e0e10; border-color: var(--accent); }
+  /* Upload area */
+  .upload-zone {
+    margin: 16px 20px;
+    border: 1px dashed var(--border2);
+    border-radius: 12px;
+    padding: 14px 16px;
+    display: flex; align-items: center; gap: 12px;
+    cursor: pointer; background: var(--surface);
+    transition: border-color 0.15s;
+  }
+  .upload-zone:hover { border-color: var(--accent); }
+  .upload-icon { font-size: 22px; color: var(--muted); }
+  .upload-text { font-size: 12px; color: var(--muted); line-height: 1.4; }
+  .upload-text strong { color: var(--text); font-size: 13px; display: block; }
+  #file-input { display: none; }
+  /* Sections */
+  .section { padding: 0 20px; margin-top: 24px; }
+  .section-label {
+    font-size: 10px; font-weight: 600; letter-spacing: 1.5px;
+    color: var(--muted); text-transform: uppercase;
+    margin-bottom: 12px; font-family: 'DM Mono', monospace;
+  }
+  /* Hero card */
+  .hero-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 10px;
+  }
+  .hero-label { font-size: 11px; color: var(--muted); font-family: 'DM Mono', monospace; margin-bottom: 6px; }
+  .hero-value { font-size: 38px; font-weight: 800; letter-spacing: -1.5px; line-height: 1; }
+  .hero-sub { margin-top: 12px; display: flex; align-items: center; gap: 8px; }
+  .delta {
+    font-size: 12px; font-weight: 600; font-family: 'DM Mono', monospace;
+    padding: 3px 8px; border-radius: 6px;
+  }
+  .delta.up { background: var(--green-bg); color: var(--green); }
+  .delta.down { background: var(--red-bg); color: var(--red); }
+  .delta.neutral { background: var(--yellow-bg); color: var(--yellow); }
+  .hero-sub-label { font-size: 12px; color: var(--muted); }
+  /* KPI grid */
+  .kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .kpi-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px;
+  }
+  .kpi-label { font-size: 10px; color: var(--muted); font-family: 'DM Mono', monospace; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .kpi-value { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; }
+  .kpi-pct { font-size: 11px; font-family: 'DM Mono', monospace; margin-top: 4px; }
+  .kpi-pct.pos { color: var(--green); }
+  .kpi-pct.neg { color: var(--red); }
+  .kpi-pct.neu { color: var(--yellow); }
+  /* Breakdown bars */
+  .breakdown-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px;
+  }
+  .breakdown-row { margin-bottom: 14px; }
+  .breakdown-row:last-child { margin-bottom: 0; }
+  .breakdown-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+  .breakdown-name { font-size: 12px; color: var(--text); }
+  .breakdown-val { font-size: 12px; font-family: 'DM Mono', monospace; color: var(--muted); }
+  .bar-track { height: 4px; background: var(--border2); border-radius: 2px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 2px; transition: width 0.5s cubic-bezier(.4,0,.2,1); }
+  /* Margin gauge */
+  .gauge-row { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .gauge-label { font-size: 11px; color: var(--muted); font-family: 'DM Mono', monospace; width: 90px; flex-shrink: 0; text-transform: uppercase; }
+  .gauge-track { flex: 1; height: 6px; background: var(--surface2); border-radius: 3px; overflow: hidden; position: relative; }
+  .gauge-fill { height: 100%; border-radius: 3px; }
+  .gauge-value { font-size: 12px; font-weight: 600; font-family: 'DM Mono', monospace; width: 46px; text-align: right; flex-shrink: 0; }
+  /* Mini chart */
+  .chart-wrap { margin-top: 4px; }
+  .chart-bars { display: flex; align-items: flex-end; gap: 4px; height: 64px; }
+  .chart-bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .chart-bar { width: 100%; border-radius: 3px 3px 0 0; min-height: 2px; transition: height 0.4s; }
+  .chart-month { font-size: 9px; color: var(--muted2); font-family: 'DM Mono', monospace; }
+  /* Result highlight */
+  .result-card {
+    border-radius: 14px;
+    padding: 18px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .result-card.pos { background: var(--green-bg); border: 1px solid rgba(45,206,126,0.2); }
+  .result-card.neg { background: var(--red-bg); border: 1px solid rgba(255,94,94,0.15); }
+  .result-left { }
+  .result-label { font-size: 10px; font-family: 'DM Mono', monospace; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+  .result-card.pos .result-label { color: var(--green); }
+  .result-card.neg .result-label { color: var(--red); }
+  .result-value { font-size: 28px; font-weight: 800; letter-spacing: -1px; }
+  .result-card.pos .result-value { color: var(--green); }
+  .result-card.neg .result-value { color: var(--red); }
+  .result-icon { font-size: 36px; opacity: 0.4; }
+  /* Bottom nav */
+  .bottom-nav {
+    position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+    width: 100%; max-width: 430px;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    padding: 12px 20px 28px;
+    display: flex; justify-content: space-around;
+  }
+  .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; }
+  .nav-icon { font-size: 20px; color: var(--muted); }
+  .nav-icon.active { color: var(--accent); }
+  .nav-label { font-size: 10px; color: var(--muted); font-family: 'DM Mono', monospace; }
+  /* Divider */
+  .divider { height: 1px; background: var(--border); margin: 8px 0; }
+  /* Fonte upload info */
+  .data-source { font-size: 10px; color: var(--muted2); font-family: 'DM Mono', monospace; margin-top: 8px; text-align: center; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-top">
+    <div class="logo">NAO<span>NDA</span></div>
+    <div class="badge-live">2026</div>
+  </div>
+  <div class="month-tabs" id="month-tabs">
+    <button class="tab" data-m="0">Jan</button>
+    <button class="tab" data-m="1">Fev</button>
+    <button class="tab" data-m="2">Mar</button>
+    <button class="tab active" data-m="3">Abr</button>
+    <button class="tab" data-m="4">Mai</button>
+    <button class="tab" data-m="5">Jun</button>
+    <button class="tab" data-m="6">Jul</button>
+    <button class="tab" data-m="7">Ago</button>
+    <button class="tab" data-m="8">Set</button>
+    <button class="tab" data-m="9">Out</button>
+    <button class="tab" data-m="10">Nov</button>
+    <button class="tab" data-m="11">Dez</button>
+  </div>
+</div>
+
+<label class="upload-zone" for="file-input">
+  <span style="font-size:24px; color: var(--muted);">&#8679;</span>
+  <div class="upload-text">
+    <strong>Importar planilha DRE</strong>
+    Selecione o arquivo .xlsx para atualizar os dados
+  </div>
+  <input type="file" id="file-input" accept=".xlsx,.xls,.csv">
+</label>
+
+<div id="data-source-label" class="data-source">dados de referência: abril e maio 2026</div>
+
+<div class="section">
+  <div class="section-label">Faturamento bruto</div>
+  <div class="hero-card">
+    <div class="hero-label">TOTAL DO MÊS</div>
+    <div class="hero-value" id="hero-val">R$ 0</div>
+    <div class="hero-sub">
+      <span class="delta neutral" id="hero-delta">—</span>
+      <span class="hero-sub-label" id="hero-sub-label">sem comparativo</span>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-label">Indicadores principais</div>
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-label">Receita líquida</div>
+      <div class="kpi-value" id="kpi-rec-liq">—</div>
+      <div class="kpi-pct" id="kpi-rec-liq-pct"></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Lucro bruto</div>
+      <div class="kpi-value" id="kpi-lucro-bruto">—</div>
+      <div class="kpi-pct" id="kpi-lucro-bruto-pct"></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Total despesas</div>
+      <div class="kpi-value" id="kpi-desp">—</div>
+      <div class="kpi-pct" id="kpi-desp-pct"></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Impostos</div>
+      <div class="kpi-value" id="kpi-impostos">—</div>
+      <div class="kpi-pct" id="kpi-impostos-pct"></div>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top: 20px;">
+  <div class="section-label">Margens</div>
+  <div class="breakdown-card">
+    <div class="gauge-row">
+      <div class="gauge-label">Margem bruta</div>
+      <div class="gauge-track"><div class="gauge-fill" id="g-bruta" style="background: var(--green);"></div></div>
+      <div class="gauge-value" id="g-bruta-val" style="color: var(--green);">—</div>
+    </div>
+    <div class="gauge-row">
+      <div class="gauge-label">Margem op.</div>
+      <div class="gauge-track"><div class="gauge-fill" id="g-op" style="background: var(--green);"></div></div>
+      <div class="gauge-value" id="g-op-val" style="color: var(--green);">—</div>
+    </div>
+    <div class="gauge-row" style="margin-bottom:0">
+      <div class="gauge-label">Mkt / receita</div>
+      <div class="gauge-track"><div class="gauge-fill" id="g-mkt" style="background: var(--yellow);"></div></div>
+      <div class="gauge-value" id="g-mkt-val" style="color: var(--yellow);">—</div>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top: 20px;">
+  <div class="section-label">Composição das despesas</div>
+  <div class="breakdown-card" id="breakdown-desp"></div>
+</div>
+
+<div class="section" style="margin-top: 20px;">
+  <div class="section-label">Evolução — faturamento</div>
+  <div class="breakdown-card">
+    <div class="chart-wrap">
+      <div class="chart-bars" id="chart-bars"></div>
+      <div style="display:flex; gap:4px; margin-top: 6px;" id="chart-labels"></div>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top: 20px;">
+  <div class="section-label">Resultado operacional</div>
+  <div id="resultado-card"></div>
+</div>
+
+<div style="height: 20px;"></div>
+
+<div class="bottom-nav">
+  <div class="nav-item">
+    <span style="font-size:20px; color: var(--accent);">&#9632;</span>
+    <div class="nav-label" style="color: var(--accent);">resumo</div>
+  </div>
+  <div class="nav-item" onclick="document.querySelector('.upload-zone').click()">
+    <span style="font-size:20px; color: var(--muted);">&#8679;</span>
+    <div class="nav-label">importar</div>
+  </div>
+  <div class="nav-item">
+    <span style="font-size:20px; color: var(--muted);">&#9675;</span>
+    <div class="nav-label">metas</div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+const MONTHS_LABEL = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+
+// Default data — abril (idx 3) e maio (idx 4)
+const defaultData = {
+  fat_bruto:   [0,0,0,7791.08,2116.80,0,0,0,0,0,0,0],
+  rec_liq:     [0,0,0,7727.08,2116.80,0,0,0,0,0,0,0],
+  lucro_bruto: [0,0,0,7626.09,2115.81,0,0,0,0,0,0,0],
+  impostos:    [0,0,0,0,0,0,0,0,0,0,0,0],
+  desp_admin:  [0,0,0,-390,-390,0,0,0,0,0,0,0],
+  desp_ecom:   [0,0,0,-100.99,-0.99,0,0,0,0,0,0,0],
+  desp_mkt:    [0,0,0,-2046.69,-2000,0,0,0,0,0,0,0],
+  desp_pessoal:[0,0,0,0,0,0,0,0,0,0,0,0],
+  resultado_op:[0,0,0,5189.40,-274.19,0,0,0,0,0,0,0],
+};
+
+let data = JSON.parse(JSON.stringify(defaultData));
+let activeMonth = 3;
+
+function fmt(v, decimals=0) {
+  if (v === null || v === undefined || isNaN(v)) return '—';
+  const abs = Math.abs(v);
+  if (abs >= 1000) return 'R$ ' + (v < 0 ? '-' : '') + Math.abs(v).toLocaleString('pt-BR', {minimumFractionDigits: decimals, maximumFractionDigits: decimals});
+  return 'R$ ' + v.toLocaleString('pt-BR', {minimumFractionDigits: decimals, maximumFractionDigits: decimals});
+}
+
+function pctOf(val, base) {
+  if (!base) return 0;
+  return (val / base) * 100;
+}
+
+function render() {
+  const m = activeMonth;
+  const fat = data.fat_bruto[m];
+  const recLiq = data.rec_liq[m];
+  const lucroBruto = data.lucro_bruto[m];
+  const impostos = data.impostos[m];
+  const despAdmin = data.desp_admin[m];
+  const despEcom = data.desp_ecom[m];
+  const despMkt = data.desp_mkt[m];
+  const despPessoal = data.desp_pessoal[m];
+  const resOp = data.resultado_op[m];
+
+  const totalDesp = despAdmin + despEcom + despMkt + despPessoal + impostos;
+  const margBruta = pctOf(lucroBruto, fat);
+  const margOp = pctOf(resOp, fat);
+  const mktRatio = fat ? pctOf(Math.abs(despMkt), fat) : 0;
+
+  // Hero
+  document.getElementById('hero-val').textContent = fat ? fmt(fat) : 'R$ 0';
+  const prevFat = m > 0 ? data.fat_bruto[m-1] : null;
+  const heroDelta = document.getElementById('hero-delta');
+  const heroSubLabel = document.getElementById('hero-sub-label');
+  if (prevFat && prevFat > 0 && fat > 0) {
+    const chg = ((fat - prevFat) / prevFat) * 100;
+    heroDelta.textContent = (chg >= 0 ? '+' : '') + chg.toFixed(1) + '%';
+    heroDelta.className = 'delta ' + (chg >= 0 ? 'up' : 'down');
+    heroSubLabel.textContent = 'vs ' + MONTHS_LABEL[m-1];
+  } else if (!fat) {
+    heroDelta.textContent = '—';
+    heroDelta.className = 'delta neutral';
+    heroSubLabel.textContent = 'sem dados';
+  } else {
+    heroDelta.textContent = '1º mês';
+    heroDelta.className = 'delta neutral';
+    heroSubLabel.textContent = 'início da série';
+  }
+
+  // KPIs
+  function setKpi(id, pctId, val, base, isNeg) {
+    const el = document.getElementById(id);
+    const pel = document.getElementById(pctId);
+    if (!val && val !== 0) { el.textContent = '—'; pel.textContent = ''; return; }
+    el.textContent = fmt(val);
+    const p = pctOf(val, base);
+    if (!isNaN(p) && base) {
+      pel.textContent = p.toFixed(1) + '% da receita';
+      const good = isNeg ? val < 0 : val >= 0;
+      const pctAbs = Math.abs(p);
+      pel.className = 'kpi-pct ' + (isNeg ? (pctAbs < 30 ? 'pos' : 'neg') : (p >= 0 ? 'pos' : 'neg'));
+    } else {
+      pel.textContent = '';
+    }
+  }
+  setKpi('kpi-rec-liq', 'kpi-rec-liq-pct', recLiq, fat, false);
+  setKpi('kpi-lucro-bruto', 'kpi-lucro-bruto-pct', lucroBruto, fat, false);
+  setKpi('kpi-desp', 'kpi-desp-pct', totalDesp, fat, true);
+  setKpi('kpi-impostos', 'kpi-impostos-pct', impostos, fat, true);
+
+  // Gauges
+  function setGauge(fillId, valId, pct, color) {
+    const abs = Math.min(Math.abs(pct), 100);
+    document.getElementById(fillId).style.width = abs + '%';
+    document.getElementById(fillId).style.background = color;
+    document.getElementById(valId).textContent = isNaN(pct) ? '—' : pct.toFixed(1) + '%';
+    document.getElementById(valId).style.color = color;
+  }
+  setGauge('g-bruta', 'g-bruta-val', margBruta, margBruta >= 50 ? 'var(--green)' : margBruta >= 20 ? 'var(--yellow)' : 'var(--red)');
+  setGauge('g-op', 'g-op-val', margOp, margOp >= 15 ? 'var(--green)' : margOp >= 0 ? 'var(--yellow)' : 'var(--red)');
+  setGauge('g-mkt', 'g-mkt-val', mktRatio, mktRatio <= 20 ? 'var(--green)' : mktRatio <= 35 ? 'var(--yellow)' : 'var(--red)');
+
+  // Breakdown despesas
+  const despItems = [
+    { name: 'Marketing', val: Math.abs(despMkt), color: '#e8f542' },
+    { name: 'Administrativo', val: Math.abs(despAdmin), color: '#2dce7e' },
+    { name: 'E-commerce', val: Math.abs(despEcom), color: '#5bc4f5' },
+    { name: 'Pessoal', val: Math.abs(despPessoal), color: '#c47af5' },
+  ];
+  const maxDesp = Math.max(...despItems.map(d => d.val), 1);
+  const container = document.getElementById('breakdown-desp');
+  container.innerHTML = despItems.map(d => `
+    <div class="breakdown-row">
+      <div class="breakdown-top">
+        <span class="breakdown-name">${d.name}</span>
+        <span class="breakdown-val">${d.val ? fmt(d.val) : '—'}</span>
+      </div>
+      <div class="bar-track">
+        <div class="bar-fill" style="width:${(d.val/maxDesp*100).toFixed(1)}%; background:${d.color};"></div>
+      </div>
+    </div>
+  `).join('');
+
+  // Mini bar chart — faturamento
+  const barsEl = document.getElementById('chart-bars');
+  const labelsEl = document.getElementById('chart-labels');
+  const maxFat = Math.max(...data.fat_bruto, 1);
+  barsEl.innerHTML = data.fat_bruto.map((v, i) => {
+    const h = v ? Math.max((v / maxFat) * 56, 2) : 2;
+    const isActive = i === activeMonth;
+    const color = isActive ? 'var(--accent)' : (v > 0 ? '#2dce7e66' : 'var(--surface2)');
+    return `<div class="chart-bar-wrap"><div class="chart-bar" style="height:${h}px; background:${color};"></div></div>`;
+  }).join('');
+  labelsEl.innerHTML = MONTHS_LABEL.map((l, i) => {
+    const isActive = i === activeMonth;
+    return `<div style="flex:1; text-align:center; font-size:9px; font-family:'DM Mono',monospace; color:${isActive ? 'var(--accent)' : 'var(--muted2)'};">${l}</div>`;
+  }).join('');
+
+  // Resultado
+  const resCard = document.getElementById('resultado-card');
+  const isPos = resOp >= 0;
+  resCard.innerHTML = `
+    <div class="result-card ${resOp !== 0 ? (isPos ? 'pos' : 'neg') : 'pos'}" style="${resOp === 0 ? 'background: var(--surface); border: 1px solid var(--border);' : ''}">
+      <div class="result-left">
+        <div class="result-label" style="${resOp === 0 ? 'color: var(--muted)' : ''}">${isPos || resOp === 0 ? 'Resultado positivo' : 'Resultado negativo'}</div>
+        <div class="result-value" style="${resOp === 0 ? 'color: var(--muted); font-size: 22px;' : ''}">
+          ${resOp !== 0 ? fmt(resOp) : 'sem dados'}
+        </div>
+        ${fat && resOp !== 0 ? `<div style="font-size:11px; font-family:'DM Mono',monospace; color: ${isPos ? 'var(--green)' : 'var(--red)'}; margin-top:4px;">${pctOf(resOp, fat).toFixed(1)}% sobre faturamento</div>` : ''}
+      </div>
+      <div class="result-icon">${isPos ? '↑' : '↓'}</div>
+    </div>
+  `;
+}
+
+// Month tab clicks
+document.querySelectorAll('.tab').forEach(t => {
+  t.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+    t.classList.add('active');
+    activeMonth = parseInt(t.dataset.m);
+    render();
+  });
+});
+
+// File upload
+document.getElementById('file-input').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    try {
+      const wb = XLSX.read(ev.target.result, { type: 'array' });
+      const ws = wb.Sheets['DRE'];
+      if (!ws) { alert('Aba "DRE" não encontrada na planilha.'); return; }
+      const json = XLSX.utils.sheet_to_json(ws, { header: 1, defval: 0 });
+
+      // Find rows by label — col A (index 0), values in cols C,E,G... (idx 2,4,6...)
+      function findRow(label) {
+        return json.findIndex(r => r[0] && String(r[0]).trim().toLowerCase().includes(label.toLowerCase()));
+      }
+      function getRowVals(rowIdx) {
+        if (rowIdx < 0) return new Array(12).fill(0);
+        const row = json[rowIdx];
+        const vals = [];
+        for (let m = 0; m < 12; m++) {
+          const v = parseFloat(row[2 + m*2]) || 0;
+          vals.push(v);
+        }
+        return vals;
+      }
+
+      const rowMap = {
+        fat_bruto:    findRow('FATURAMENTO BRUTO'),
+        rec_liq:      findRow('RECEITA LÍQUIDA'),
+        lucro_bruto:  findRow('LUCRO BRUTO'),
+        impostos:     findRow('6. Impostos'),
+        desp_admin:   findRow('7. Despesas administrativas'),
+        desp_ecom:    findRow('8. E-commerce'),
+        desp_mkt:     findRow('10. Marketing'),
+        desp_pessoal: findRow('9. Despesas com pessoal'),
+        resultado_op: findRow('RESULTADO OPERACIONAL'),
+      };
+
+      let found = false;
+      for (const [key, rowIdx] of Object.entries(rowMap)) {
+        if (rowIdx >= 0) {
+          data[key] = getRowVals(rowIdx);
+          found = true;
+        }
+      }
+
+      if (found) {
+        document.getElementById('data-source-label').textContent = 'dados importados: ' + file.name;
+        render();
+      } else {
+        alert('Não foi possível ler os dados da planilha. Verifique se é o arquivo DRE da NAONDA.');
+      }
+    } catch(err) {
+      alert('Erro ao ler o arquivo: ' + err.message);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+});
+
+render();
+</script>
+</body>
+</html>
